@@ -1,7 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import config from "./config";
 
+console.log("Vite config loaded with external host:", config.external_host);
 // https://vite.dev/config/
 export default defineConfig({
 	plugins: [react(), tailwindcss()],
@@ -9,10 +11,11 @@ export default defineConfig({
 		proxy: {
 			// هر درخواستی که با /api شروع بشه به API خارجی فوروارد میشه
 			"/api": {
-				target: "https://pumva-api.simva-beta2.e-ucm.es/views",
+				target: "https://" + config.external_api_host + "/views",
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, ""), // /api حذف میشه
 			},
 		},
+		allowedHosts: [config.external_host,  "localhost"]
 	},
 });
