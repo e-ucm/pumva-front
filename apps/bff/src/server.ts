@@ -9,16 +9,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
+app.use("/api", apiRouter);
+
 app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
-app.get("/api/hello", (req: Request, res: Response) => {
-  res.json({ message: "Hello from BFF" });
-});
-
-app.get("/*", (_ : Request, res: Response) => {
+app.get("/:any", (req: Request, res: Response) => {
+  console.info("Serving index.html for unmatched route", req.path);
   res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
 });
-
 
 app.listen(5173, () => {
   console.log("BFF running on 5173");
