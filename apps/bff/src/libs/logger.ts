@@ -48,9 +48,9 @@ import config from '../config';
 const logsFolder = config.logger.folder;
 
 // Ensure logs folder exists
-if (!fs.existsSync(logsFolder)) {
-  fs.mkdirSync(logsFolder, { recursive: true });
-}
+//if (!fs.existsSync(logsFolder)) {
+//  fs.mkdirSync(logsFolder, { recursive: true });
+//}
 
 // Safe timestamp for filename (no colons)
 const timestamp = new Date().toISOString().replace(/:/g, '-');

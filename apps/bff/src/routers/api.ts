@@ -1,14 +1,23 @@
-import { Router } from "express";
+import { NextFunction, Router } from "express";
 import { Request, Response } from "express";
 import passport from 'passport';
 // @ts-ignore
 import { Strategy as KeyCloakStrategy } from 'passport-keycloak-oauth2-oidc';
 import config from '../config';
+import { logger } from "../libs/logger";
 
 interface User {
-  data?: any;
+  sso?: any;
+  sql?: any;
   jwt?: string;
   refreshToken?: string;
+}
+
+interface AuthenticatedRequest extends Request {
+  session: {
+    user?: User,
+    intendedUrl?: string
+  };
 }
 
 class SimvaKeyCloakStrategy extends KeyCloakStrategy {
@@ -54,7 +63,7 @@ class SimvaKeyCloakStrategy extends KeyCloakStrategy {
  console.info('------------------');
  passport.use('openid', new SimvaKeyCloakStrategy(keycloakConfig, (accessToken: string, refreshToken: string, profile: any, done: any) => {
      const user: User = {};
-     user.data = profile;
+     user.sso = profile;
      user.jwt = accessToken;
      user.refreshToken = refreshToken;
      done(null, user);
@@ -69,6 +78,27 @@ router.get("/hello", (req: Request, res: Response) => {
 
 router.get('/ssoconnect', (req: Request, res: Response, next: any) => {
   passport.authenticate('openid', {})(req, res, next);
+});
+
+router.get('/openid/return', (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate('openid', { failureRedirect: '/ssoconnect' }, (err : Error, user : User) => {
+      logger.info('/openid/return: USER');
+      if(err){
+        return res.redirect('/ssoconnect');
+      }
+      const authReq = req as unknown as AuthenticatedRequest;
+      authReq.session.user={};
+      authReq.session.user.sso = user.sso;
+      authReq.session.user.jwt = user.jwt;
+      authReq.session.user.refreshToken = user.refreshToken;
+      let session = authReq.session;
+      session.user = user;
+      logger.info(user);
+      const intendedUrl = authReq.session.intendedUrl || '/';
+      delete authReq.session.intendedUrl;
+      logger.info(authReq.session);
+      res.redirect(intendedUrl);
+    })(req, res, next);
 });
 
 export default router;

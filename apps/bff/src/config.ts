@@ -11,7 +11,12 @@ config.external_port = process.env.PUMVA_PORT || 443
 config.external_url = `${config.external_protocol}://${config.external_host}${ignored_ports.includes(config.external_port) ? '' : `:${config.external_port}` }`
 config.favicon_file = process.env.PUMVA_FAVICON || '/favicon.ico'
 config.favicon_url = config.external_host + config.favicon_file
- 
+
+config.logger = {};
+config.logger.level = process.env.LOGGER_LEVEL || 'info';
+config.logger.processTag = process.env.LOGGER_PROCESS_TAG || 'bff';
+config.logger.folder = process.env.LOGGER_FOLDER || '../../logs';
+
 config.sso = {}
 config.sso.host = process.env.SSO_HOST || 'sso.external.test'
 config.sso.protocol = process.env.SSO_PROTOCOL || 'https'

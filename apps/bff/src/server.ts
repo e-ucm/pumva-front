@@ -3,11 +3,34 @@ import express from "express";
 import { Request, Response } from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import session from "express-session";
+import passport from "passport";
 import apiRouter from "./routers/api";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+
+// Add session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+// Add passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport serialization (required for sessions)
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+  done(null, user as any);
+});
 
 app.use("/api", apiRouter);
 
