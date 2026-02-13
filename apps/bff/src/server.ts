@@ -3,6 +3,7 @@ import express from "express";
 import { Request, Response } from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import apiRouter from "./routers/api";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -14,7 +15,7 @@ app.get("/api/hello", (req: Request, res: Response) => {
   res.json({ message: "Hello from BFF" });
 });
 
-app.get("*", (_ : Request, res: Response) => {
+app.get("/*", (_ : Request, res: Response) => {
   res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
 });
 
