@@ -4,6 +4,7 @@ import Layout from "./components/Layout";
 import GameCardsList from "./components/GameCardsList";
 import GameDetail from "./pages/GameDetail";
 import { fetchGames } from "./services/api";
+import Login from "./pages/Login";
 
 function Home() {
 	const [games, setGames] = useState<any[] | null>(null);
@@ -103,6 +104,7 @@ function App() {
 	return (
 		<BrowserRouter>
 			<Routes>
+				<Route path="/login" element={<Login />} />
 				<Route path="/" element={<Home />} />
 				<Route path="/games/:id" element={<GameDetail />} />
 			</Routes>

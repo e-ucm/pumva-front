@@ -15,6 +15,7 @@ export default defineConfig({
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, ""), // /api حذف میشه
 			},
+			"/api-bff": "https://" + config.external_host + ":5173/api", // درخواست‌های /api-bff به BFF محلی فوروارد میشه
 		},
 		allowedHosts: [config.external_host,  "localhost"]
 	},
