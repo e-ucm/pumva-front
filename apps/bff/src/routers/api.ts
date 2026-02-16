@@ -7,6 +7,8 @@ import { Strategy as KeyCloakStrategy } from 'passport-keycloak-oauth2-oidc';
 import config from '../config';
 import { logger } from "../libs/logger";
 import userClientsListManager from '../libs/userClientsListManager';
+import axios from "axios";
+import * as usertools from "../libs/usertools";
 
 interface User {
   sso?: any;
@@ -84,6 +86,14 @@ router.get('/ssoconnect', (req: Request, res: Response, next: any) => {
   passport.authenticate('openid', {})(req, res, next);
 });
 
+router.get('/isAuthenticated', (req: AuthenticatedRequest, res: Response) => {
+  if (req.session && req.session.user && req.session.user.jwt) {
+    res.json({ authenticated: true });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
 router.get('/openid/return', (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate('openid', { failureRedirect: '/ssoconnect' }, (err : Error, user : User) => {
       logger.info('/openid/return: USER');
@@ -109,5 +119,47 @@ router.get('/openid/return', (req: Request, res: Response, next: NextFunction) =
       res.redirect(intendedUrl);
     })(req, res, next);
 });
+
+router.get('/logout', function(req : AuthenticatedRequest, res : Response, next : NextFunction){
+    let sessionId = req.session.id;
+    if(req.session && req.session.user && req.session.user.refreshToken){
+      let clientConfig= `${config.sso.client_id}:${config.sso.client_secret}`
+      const querystring = new URLSearchParams({
+        'grant_type': 'refresh_token',
+        'refresh_token': req.session.user.refreshToken
+      });
+      axios.post(`${config.sso.url}/realms/${config.sso.realm}/protocol/openid-connect/logout`, querystring, {
+          headers: {
+            'Authorization': `Basic ${Buffer.from(clientConfig).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+      })
+      .then((response : any) => {
+        userClientsListManager.removeSession(sessionId);
+        req.session.user = undefined;
+        res.redirect('/login');
+      })
+      .catch((error : any) => {
+        logger.error(error);
+        res.redirect('/login');
+      })
+    }else{
+      userClientsListManager.removeSession(sessionId);
+      req.session.user = undefined;
+      res.redirect('/login');
+    }
+  });
+
+  router.get('/refresh_auth', function (req : AuthenticatedRequest, res : Response, next : NextFunction) {
+    usertools.authExpiredAndRefreshAuthWithCallback(userClientsListManager.getSession(req.session.id), function(error : any, result : any) {
+      if(error){
+        res.redirect("/login");
+      }else{
+        logger.debug("auth() - Token OK");
+        res.send(result);
+        //return next();
+      }
+    });
+  });
 
 export default router;

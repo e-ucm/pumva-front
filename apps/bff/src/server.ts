@@ -7,7 +7,7 @@ import session from "express-session";
 import passport from "passport";
 import apiRouter from "./routers/api";
 import bffRouter from "./routers/bff";
-import { auth, redirectToFrontend } from "./libs/usertools";
+import { redirectToFrontend } from "./libs/usertools";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -34,19 +34,27 @@ passport.deserializeUser((user, done) => {
   done(null, user as any);
 });
 
-//app.use(auth);
-
+// Serve static files BEFORE auth middleware to avoid authentication on assets
+app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 app.use("/api", apiRouter);
 app.use("/bff", bffRouter);
 
-app.use(express.static(path.join(__dirname, "../../frontend/dist")));
-
-app.get("/:any", (req: Request, res: Response) => {
-  redirectToFrontend(req as any, res);
-});
-
-app.get("/:any/:any", (req: Request, res: Response) => {
-  redirectToFrontend(req as any, res);
+// Catch-all middleware for frontend SPA (must be last)
+app.use((req: Request, res: Response) => {
+  // Only serve frontend for non-API, non-asset routes
+  if (!req.path.startsWith('/api') && 
+      !req.path.startsWith('/bff') && 
+      !req.path.startsWith('/assets/') &&
+      !req.path.endsWith('.js') &&
+      !req.path.endsWith('.css') &&
+      !req.path.endsWith('.ico') &&
+      !req.path.endsWith('.svg') &&
+      !req.path.endsWith('.png') &&
+      !req.path.endsWith('.jpg')) {
+    redirectToFrontend(req as any, res);
+  } else {
+    res.status(404).send('Not Found');
+  }
 });
 
 app.listen(5173, () => {
