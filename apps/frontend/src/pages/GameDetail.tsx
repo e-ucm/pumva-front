@@ -11,6 +11,7 @@ export default function GameDetail() {
 	const [error, setError] = useState<string | null>(null);
 	const { user } = useAuth();
 	const userId = user?.user_id || -1;
+	const userName = user?.username || "";
 
 	useEffect(() => {
 		// Only fetch game if we have a valid userId and game id
@@ -33,7 +34,7 @@ export default function GameDetail() {
 	}, [id, userId]);
 
 	return (
-		<Layout>
+		<Layout userName={userName} userId={userId}>
 			<div className="mb-6">
 				<Link to="/" className="text-sm text-orange-500 hover:underline">
 					← Back to games
