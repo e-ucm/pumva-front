@@ -12,6 +12,15 @@ async function handleRes(res: Response) {
 	return res.json().catch(() => null);
 }
 
+export async function getMe() {
+	const res = await fetch(`/bff/users/me`, {
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
+	return handleRes(res);
+}
+
 export async function fetchGames(userId: number) {
 	const res = await fetch(`/api/games/user/${userId}`, {
 		headers: {

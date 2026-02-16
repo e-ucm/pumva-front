@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import GameCardsList from "./components/GameCardsList";
 import GameDetail from "./pages/GameDetail";
-import { fetchGames } from "./services/api";
+import { fetchGames, getMe } from "./services/api";
 import Login from "./pages/Login";
 
 function Home() {
@@ -11,10 +11,14 @@ function Home() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [searchQuery, setSearchQuery] = useState("");
-	const userId = 10; // Example user ID, replace with actual logic to get user ID
-	const userName = "Rana Saniei"; // Replace with actual user name
+	const [currentUser, setCurrentUser] = useState<any>(null);
+	const userId = currentUser?.user_id || -1; // Example user ID, replace with actual logic to get user ID
+	const userName = currentUser?.username || ""; // Replace with actual user name
 
 	useEffect(() => {
+		getMe().then((user) => {
+			setCurrentUser(user);
+		});
 		let mounted = true;
 		fetchGames(userId)
 			.then((data) => {
