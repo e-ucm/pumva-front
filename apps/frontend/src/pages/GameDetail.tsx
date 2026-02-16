@@ -2,17 +2,24 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "../components/Layout";
 import { fetchGame } from "../services/api";
+import { useAuth } from "../hooks/useAuth";
 
 export default function GameDetail() {
 	const { id } = useParams();
 	const [game, setGame] = useState<any | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const { user } = useAuth();
+	const userId = user?.user_id || -1;
 
 	useEffect(() => {
+		// Only fetch game if we have a valid userId and game id
+		if (!id || userId === -1) {
+			setLoading(false);
+			return;
+		}
+
 		let mounted = true;
-		const userId = 10;
-		if (!id) return;
 		fetchGame(userId, id as unknown as number)
 			.then((g) => mounted && setGame(g))
 			.catch(
@@ -23,7 +30,7 @@ export default function GameDetail() {
 		return () => {
 			mounted = false;
 		};
-	}, [id]);
+	}, [id, userId]);
 
 	return (
 		<Layout>

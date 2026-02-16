@@ -3,7 +3,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import GameCardsList from "./components/GameCardsList";
 import GameDetail from "./pages/GameDetail";
-import { fetchGames, getMe } from "./services/api";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { fetchGames } from "./services/api";
+import { useAuth } from "./hooks/useAuth";
 import Login from "./pages/Login";
 
 function Home() {
@@ -11,14 +13,11 @@ function Home() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [searchQuery, setSearchQuery] = useState("");
-	const [currentUser, setCurrentUser] = useState<any>(null);
-	const userId = currentUser?.user_id || -1; // Example user ID, replace with actual logic to get user ID
-	const userName = currentUser?.username || ""; // Replace with actual user name
+	const { user } = useAuth();
+	const userId = user?.user_id || -1; // Example user ID, replace with actual logic to get user ID
+	const userName = user?.username || ""; // Replace with actual user name
 
 	useEffect(() => {
-		getMe().then((user) => {
-			setCurrentUser(user);
-		});
 		let mounted = true;
 		fetchGames(userId)
 			.then((data) => {
@@ -34,7 +33,7 @@ function Home() {
 		return () => {
 			mounted = false;
 		};
-	}, []);
+	}, [userId]);
 
 	const filteredGames = games
 		?.filter((game) =>
@@ -109,8 +108,22 @@ function App() {
 		<BrowserRouter>
 			<Routes>
 				<Route path="/login" element={<Login />} />
-				<Route path="/" element={<Home />} />
-				<Route path="/:id" element={<GameDetail />} />
+				<Route 
+					path="/" 
+					element={
+						<ProtectedRoute>
+							<Home />
+						</ProtectedRoute>
+					} 
+				/>
+				<Route 
+					path="/:id" 
+					element={
+						<ProtectedRoute>
+							<GameDetail />
+						</ProtectedRoute>
+					} 
+				/>
 			</Routes>
 		</BrowserRouter>
 	);

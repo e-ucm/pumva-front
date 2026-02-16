@@ -34,7 +34,7 @@ export default function Layout({
 						<div>
 							<h1 className="text-xl font-bold text-gray-900">SIMVA</h1>
 							<p className="text-xs text-gray-500">
-								Simple Validator for Serious Games • e-UCM Group • Universidad
+								PUMVA • e-UCM Group • Universidad
 								Complutense Madrid
 							</p>
 						</div>
@@ -44,6 +44,14 @@ export default function Layout({
 						<p className="text-sm font-semibold text-gray-900">{userName}</p>
 						<p className="text-xs text-gray-500">User ID: {userId}</p>
 					</div>
+					<button
+						className="ml-4 px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+						onClick={() => {
+							window.location.href = "/api/logout";
+						}}
+					>
+						Logout
+					</button>
 				</div>
 			</nav>
 
@@ -57,7 +65,7 @@ export default function Layout({
 			>
 				<div className="max-w-7xl mx-auto px-8 py-6 text-center">
 					<p className="text-sm text-gray-600">
-						SIMVA v1.0 • Simple Validator for Serious Games • Educational Games
+						Pumva v1.0 • Simple Validator for Serious Games • Educational Games
 						Management System
 					</p>
 					<p className="text-xs text-gray-500 mt-1">

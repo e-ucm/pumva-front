@@ -12,6 +12,15 @@ async function handleRes(res: Response) {
 	return res.json().catch(() => null);
 }
 
+export async function checkAuthentication() {
+	const res = await fetch(`/api/isAuthenticated`, {
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
+	return handleRes(res);
+}
+
 export async function getMe() {
 	const res = await fetch(`/bff/users/me`, {
 		headers: {
