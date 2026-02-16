@@ -6,6 +6,7 @@ import axios from 'axios';
 import { logger } from './logger';
 import config from '../config';
 import userClientsListManager from "./userClientsListManager";
+import path from "path";
 
 export function preTabs(level = 0): string {
 	var pre = '/';
@@ -15,16 +16,25 @@ export function preTabs(level = 0): string {
 	return pre;
 }
 
-export function redirectOpenId(level : number = 0, req: AuthenticatedRequest, res: Response) : void {
-	var pre=preTabs(level);
-	return res.redirect(`${pre}users/openid`);
+export function redirectToFrontend(req: AuthenticatedRequest, res: Response): void {
+	logger.info(`redirectToFrontend() - Redirecting to frontend for URL: ${req.originalUrl}`);
+	logger.info(config.frontendPath);
+	return res.sendFile(path.join(config.frontendPath, "index.html"));
 }
 
-export function auth(level: number = 0) : any {
+export function redirectOpenId(level : number = 0, req: AuthenticatedRequest, res: Response) : void {
+	logger.info(`redirectOpenId() - Redirecting to OpenID Connect login page for URL: ${req.originalUrl}`);
+	if(req.originalUrl == "/login") {
+		return redirectToFrontend(req, res);
+	}
 	var pre=preTabs(level);
-	return function(req: AuthenticatedRequest, res: Response, next: any) {
-	  let simvaToken = userClientsListManager.getJWT(req.session.id);
-	  if (req.session && req.session.user && req.session.user.jwt){
+	return res.redirect(`${pre}login`);
+}
+
+export function auth(req: AuthenticatedRequest, res: Response, next: any) {
+	let level = req.originalUrl.split("/").length - 2;
+	let simvaToken = userClientsListManager.getJWT(req.session.id);
+	if (req.session && req.session.user && req.session.user.jwt){
 		authExpiredAndRefreshAuthWithCallback(userClientsListManager.getSession(req.session.id), (error: Error, result: any) => {
 			if(error) {
 				req.session.intendedUrl=`${req.originalUrl}`;
@@ -34,7 +44,7 @@ export function auth(level: number = 0) : any {
 				return next();
 			}
 		});
-	  } else if(simvaToken){
+	} else if(simvaToken){
 		logger.info("auth() - New token");
 		let session = req.session;
 		let profile = getProfileFromJWT(simvaToken);
@@ -42,23 +52,22 @@ export function auth(level: number = 0) : any {
 			session.user.sso = profile;
 			session.user.jwt = simvaToken;
 		}
-		userClientsListManager.addClient(session);
+		//userClientsListManager.addClient(session.id, session);
 		if (req.session.user) {
 			req.session.user.jwt = simvaToken;
 		}
 		logger.info("auth() - New token done");
 		return next();
-	  }else{
+	}else{
 		req.session.intendedUrl=`${req.originalUrl}`;
 		return redirectOpenId(level, req, res);
-	  }
-	};
+	}
 }
 
 export async function getRefreshSessionsList() : Promise<string[]> {
      let sessionsToSend = [];
      for (let [sessionId, sessionData] of userClientsListManager.sessions) {
-         let ok = await isAuthExpiredPromise(sessionData.session);
+         let ok = await isAuthExpiredPromise(sessionData);
          if(ok) {
              sessionsToSend.push(ok);
          }
@@ -102,9 +111,9 @@ export async function getRefreshSessionsList() : Promise<string[]> {
  }
 
 export function setUser(req: AuthenticatedRequest, user: any): void {
-	let decoded = jwt.decode(user.jwt);
+	let decoded = jwt.decode(user.jwt) as any;
 	logger.info(`JWT : ${JSON.stringify(decoded)}`);
-	if (req.session?.user?.sso) {
+	if (req.session?.user?.sso && decoded) {
 		req.session.user.sso.roles = decoded.realm_access.roles;
 		req.session.user.sso.role = getRoleFromJWT(decoded);
 	}

@@ -1,4 +1,4 @@
-import { sso } from "../../../../simva-front/config";
+import path from "path";
 
 let config: any = {};
 
@@ -11,6 +11,7 @@ config.external_port = process.env.PUMVA_PORT || 443
 config.external_url = `${config.external_protocol}://${config.external_host}${ignored_ports.includes(config.external_port) ? '' : `:${config.external_port}` }`
 config.favicon_file = process.env.PUMVA_FAVICON || '/favicon.ico'
 config.favicon_url = config.external_host + config.favicon_file
+config.frontendPath = process.env.PUMVA_FRONTEND_PATH || path.join(__dirname, "../../frontend/dist");
 
 config.api = {};
 config.api.host = process.env.PUMVA_API_HOST || 'api.external.test'

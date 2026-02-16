@@ -33,7 +33,7 @@ export class UserClientsListManager {
         if(result && result.user && result.user.jwt) {
             return result.user.jwt;
         } else {
-            throw new Error("Session not found or JWT not available for session " + sessionId);
+            return undefined as any;
         }
     }
 
@@ -42,7 +42,7 @@ export class UserClientsListManager {
         if(result) {
             return result;
         } else {
-            throw new Error("Session not found for sessionId " + sessionId);
+            return undefined as any;
         }
     }
 

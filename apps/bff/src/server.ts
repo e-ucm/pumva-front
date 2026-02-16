@@ -7,6 +7,7 @@ import session from "express-session";
 import passport from "passport";
 import apiRouter from "./routers/api";
 import bffRouter from "./routers/bff";
+import { auth, redirectToFrontend } from "./libs/usertools";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,14 +34,19 @@ passport.deserializeUser((user, done) => {
   done(null, user as any);
 });
 
+//app.use(auth);
+
 app.use("/api", apiRouter);
 app.use("/bff", bffRouter);
 
 app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
 app.get("/:any", (req: Request, res: Response) => {
-  console.info("Serving index.html for unmatched route", req.path);
-  res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+  redirectToFrontend(req as any, res);
+});
+
+app.get("/:any/:any", (req: Request, res: Response) => {
+  redirectToFrontend(req as any, res);
 });
 
 app.listen(5173, () => {
