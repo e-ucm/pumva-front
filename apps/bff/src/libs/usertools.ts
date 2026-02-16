@@ -1,3 +1,24 @@
+/**
+ * @fileoverview User authentication and session management utilities.
+ * Provides functions for authentication, session handling, JWT operations,
+ * and frontend integration for the BFF application.
+ * 
+ * Features:
+ * - Authentication status checking and token refresh
+ * - Frontend routing and redirection
+ * - JWT token handling and validation  
+ * - Session management and cleanup
+ * - SSO authentication flow
+ * 
+ * @module libs/usertools
+ * @requires express
+ * @requires jsonwebtoken
+ * @requires axios
+ * @requires ./logger
+ * @requires ../config
+ * @author PUMVA Team
+ */
+
 import { NextFunction, Response } from "express";
 import { Session , AuthenticatedRequest } from "../routers/api";
 
@@ -8,12 +29,35 @@ import config from '../config';
 import userClientsListManager from "./userClientsListManager";
 import path from "path";
 
+/**
+ * Generates URL prefix with appropriate number of '../' for navigation
+ * @param {number} [level=0] - Directory depth level
+ * @returns {string} URL prefix with appropriate relative path
+ */
+export function preTabs(level = 0): string {
+	var pre = '/';
+	for(var i = 0; i < level; i++){
+	  pre += '../';
+	}
+	return pre;
+}
+
+/**
+ * Redirects to the frontend SPA index.html file
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {void}
+ */
 export function redirectToFrontend(req: AuthenticatedRequest, res: Response): void {
 	logger.info(`redirectToFrontend() - Redirecting to frontend for URL: ${req.originalUrl}`);
 	logger.info(config.frontendPath);
 	return res.sendFile(path.join(config.frontendPath, "index.html"));
 }
 
+/**
+ * Gets a list of session IDs that need authentication refresh
+ * @returns {Promise<string[]>} Promise resolving to array of session IDs
+ */
 export async function getRefreshSessionsList() : Promise<string[]> {
      let sessionsToSend = [];
      for (let [sessionId, sessionData] of userClientsListManager.sessions) {
@@ -25,6 +69,11 @@ export async function getRefreshSessionsList() : Promise<string[]> {
      return sessionsToSend;
  }
 
+ /**
+  * Promise wrapper for authentication expiration check
+  * @param {any} session - The session object to check
+  * @returns {Promise<string|null>} Promise resolving to session ID if expired, null otherwise
+  */
  export async function isAuthExpiredPromise(session : any) : Promise<string | null> {
      return new Promise((resolve, reject) => {
          isAuthExpired(session, (error: Error, result: any) => {
@@ -39,6 +88,12 @@ export async function getRefreshSessionsList() : Promise<string[]> {
      });
  }
 
+ /**
+  * Checks authentication expiration and refreshes tokens with callback
+  * @param {any} session - The session object to check and refresh
+  * @param {Function} callback - Callback function (error, result)
+  * @returns {void}
+  */
  export function authExpiredAndRefreshAuthWithCallback(session: any, callback: any): void {
      authExpired(session, config, (error: Error, result: any) => {
          if(error) {
@@ -60,6 +115,12 @@ export async function getRefreshSessionsList() : Promise<string[]> {
      });
  }
 
+/**
+ * Sets user information in the session from JWT token
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {any} user - User object containing JWT token
+ * @returns {void}
+ */
 export function setUser(req: AuthenticatedRequest, user: any): void {
 	let decoded = jwt.decode(user.jwt) as any;
 	logger.info(`JWT : ${JSON.stringify(decoded)}`);
@@ -69,6 +130,12 @@ export function setUser(req: AuthenticatedRequest, user: any): void {
 	}
 }
 
+/**
+ * Checks if authentication token is expired
+ * @param {Session} session - The session object to check
+ * @param {Function} callback - Callback function (error, result)
+ * @returns {void}
+ */
 export function isAuthExpired(session: Session, callback: any): void {
 	try {
 		if (!session?.user?.jwt) {
@@ -104,6 +171,13 @@ export function isAuthExpired(session: Session, callback: any): void {
 	}
 }
 
+/**
+ * Checks authentication expiration and handles refresh if needed
+ * @param {any} session - The session object to check
+ * @param {any} config - Configuration object
+ * @param {Function} callback - Callback function (error, result)
+ * @returns {void}
+ */
 export function authExpired(session: any, config: any, callback: any): void {
 	isAuthExpired(session, (error: Error, result: any) => {
 		if(error) {
@@ -118,10 +192,20 @@ export function authExpired(session: any, config: any, callback: any): void {
 	});
 }
 
+/**
+ * Decodes a JWT token
+ * @param {string} token - The JWT token to decode
+ * @returns {any} Decoded token payload
+ */
 export function decodeJWT(token: string): any {
 	return jwt.decode(token);
 }
 
+/**
+ * Extracts user profile information from JWT token
+ * @param {string} token - The JWT token to extract profile from
+ * @returns {any} User profile object
+ */
 export function getProfileFromJWT(token: string): any {
 	let profile : any = {};
 	let simvaJwtToken = decodeJWT(token);
@@ -135,6 +219,11 @@ export function getProfileFromJWT(token: string): any {
 	return profile;
 }
 
+/**
+ * Determines user role from decoded JWT token
+ * @param {any} decoded - Decoded JWT token object
+ * @returns {string} User role (teacher, student, norole)
+ */
 export function getRoleFromJWT(decoded: any) : string {
 	let role = 'norole';
 	if(decoded.realm_access.roles.includes('teacher') || decoded.realm_access.roles.includes('researcher')){
@@ -145,6 +234,13 @@ export function getRoleFromJWT(decoded: any) : string {
 	return role;
 }
 
+/**
+ * Refreshes authentication tokens using refresh token
+ * @param {Session} session - The session object containing refresh token
+ * @param {any} config - Configuration object with SSO settings
+ * @param {Function} callback - Callback function (error, response)
+ * @returns {void}
+ */
 export function refreshAuth(session: Session, config: any, callback: any) : void {
 	if(session.user && session.user.refreshToken){
 		logger.info(`refreshAuth() - Refresh Token : ${session.user.refreshToken}`);

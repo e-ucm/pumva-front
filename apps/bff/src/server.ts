@@ -1,4 +1,22 @@
-// apps/bff/src/server.ts
+/**
+ * @fileoverview Express BFF (Backend for Frontend) server for the PUMVA application.
+ * Acts as a proxy between the frontend and backend services, handling authentication,
+ * session management, and serving static assets.
+ * 
+ * Features:
+ * - Express session management with Passport.js
+ * - Static file serving for frontend SPA
+ * - API proxying to backend services
+ * - Authentication middleware integration
+ * - Catch-all routing for SPA support
+ * 
+ * @module server
+ * @requires express
+ * @requires express-session
+ * @requires passport
+ * @author PUMVA Team
+ */
+
 import express from "express";
 import { Request, Response } from "express";
 import path from "path";
@@ -9,8 +27,16 @@ import apiRouter from "./routers/api";
 import bffRouter from "./routers/bff";
 import { redirectToFrontend } from "./libs/usertools";
 
+/**
+ * Current directory path for ES module compatibility
+ * @type {string}
+ */
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Express application instance
+ * @type {express.Application}
+ */
 const app = express();
 
 // Add session middleware
@@ -25,11 +51,20 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Passport serialization (required for sessions)
+/**
+ * Passport user serialization for session storage
+ * @param {any} user - User object to serialize
+ * @param {Function} done - Callback function
+ */
 passport.serializeUser((user, done) => {
   done(null, user);
 });
 
+/**
+ * Passport user deserialization from session storage
+ * @param {any} user - Serialized user data
+ * @param {Function} done - Callback function
+ */
 passport.deserializeUser((user, done) => {
   done(null, user as any);
 });
@@ -39,7 +74,14 @@ app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 app.use("/api", apiRouter);
 app.use("/bff", bffRouter);
 
-// Catch-all middleware for frontend SPA (must be last)
+/**
+ * Catch-all middleware for SPA routing support
+ * Serves the frontend for non-API routes while returning 404 for missing assets
+ * This must be the last middleware as it handles all unmatched routes
+ * 
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
 app.use((req: Request, res: Response) => {
   // Only serve frontend for non-API, non-asset routes
   if (!req.path.startsWith('/api') && 
@@ -57,6 +99,10 @@ app.use((req: Request, res: Response) => {
   }
 });
 
+/**
+ * Start the BFF server on port 5173
+ * Logs server startup to console
+ */
 app.listen(5173, () => {
   console.log("BFF running on 5173");
 });

@@ -1,3 +1,21 @@
+/**
+ * @fileoverview API router for authentication and SSO integration.
+ * Handles Keycloak authentication, session management, and user authentication status.
+ * 
+ * Features:
+ * - Keycloak passport strategy configuration
+ * - SSO authentication endpoints
+ * - User authentication status checking
+ * - Session management with JWT tokens
+ * - Route protection middleware
+ * 
+ * @module routers/api
+ * @requires express
+ * @requires passport
+ * @requires passport-keycloak-oauth2-oidc
+ * @author PUMVA Team
+ */
+
 import { NextFunction, Router } from "express";
 import { Request, Response } from "express";
 import { Session as ExpressSession } from 'express-session';
@@ -11,22 +29,48 @@ import axios from "axios";
 import * as usertools from "../libs/usertools";
 import pumvaAsync from "../libs/pumvaAsync";
 
-interface User {
+/**
+ * User interface for session management
+ * @interface User
+ * @property {any} [sso] - SSO user data
+ * @property {any} [sql] - Database user data
+ * @property {string} [jwt] - JWT token
+ * @property {string} [refreshToken] - Refresh token
+ */
+export interface User {
   sso?: any;
   sql?: any;
   jwt?: string;
   refreshToken?: string;
 }
 
+/**
+ * Extended session interface with user and intended URL
+ * @interface Session
+ * @extends ExpressSession
+ * @property {User} [user] - User object
+ * @property {string} [intendedUrl] - URL to redirect to after authentication
+ */
 export interface Session extends ExpressSession {
     user?: User;
     intendedUrl?: string;
 }
 
+/**
+ * Extended request interface for authenticated routes
+ * @interface AuthenticatedRequest
+ * @extends Request
+ * @property {Session} session - Session with user data
+ */
 export interface AuthenticatedRequest extends Request {
   session: Session;
 }
 
+/**
+ * Custom Keycloak strategy extending the base strategy
+ * @class SimvaKeyCloakStrategy
+ * @extends KeyCloakStrategy
+ */
 class SimvaKeyCloakStrategy extends KeyCloakStrategy {
    constructor(options: any, verify: any) {
      super(options, verify);
@@ -53,8 +97,10 @@ class SimvaKeyCloakStrategy extends KeyCloakStrategy {
     return super.authenticate(req, options as any);
    }
  }
- 
- let keycloakConfig = {
+ /**
+ * Keycloak configuration object for the SSO strategy
+ * @type {Object}
+ */ let keycloakConfig = {
    clientID: config.sso.client_id,
    realm: config.sso.realm,
    publicClient: config.sso.public_client,
@@ -77,16 +123,44 @@ class SimvaKeyCloakStrategy extends KeyCloakStrategy {
    })
  );
 
+/**
+ * Express router instance for API endpoints
+ * @type {Router}
+ */
 const router = Router();
 
+/**
+ * Health check endpoint
+ * @name GET /hello
+ * @function
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Object} JSON response with hello message
+ */
 router.get("/hello", (req: Request, res: Response) => {
   res.json({ message: "Hello from BFF" });
 });
 
+/**
+ * SSO connection endpoint - initiates Keycloak authentication
+ * @name GET /ssoconnect
+ * @function
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ */
 router.get('/ssoconnect', (req: Request, res: Response, next: any) => {
   passport.authenticate('openid', {})(req, res, next);
 });
 
+/**
+ * Authentication status check endpoint
+ * @name GET /isAuthenticated
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Object} JSON response with authentication status
+ */
 router.get('/isAuthenticated', (req: AuthenticatedRequest, res: Response) => {
   if (req.session && req.session.user && req.session.user.jwt) {
     res.json({ authenticated: true });
@@ -95,6 +169,15 @@ router.get('/isAuthenticated', (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
+/**
+ * OpenID Connect callback endpoint - handles authentication response from Keycloak
+ * Sets up user session and redirects to intended URL
+ * @name GET /openid/return
+ * @function
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ */
 router.get('/openid/return', (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate('openid', { failureRedirect: '/ssoconnect' }, async (err : Error, user : User) => {
       logger.info('/openid/return: USER');
@@ -121,6 +204,15 @@ router.get('/openid/return', (req: Request, res: Response, next: NextFunction) =
     })(req, res, next);
 });
 
+/**
+ * User logout endpoint
+ * Logs out the user from Keycloak and clears session data
+ * @name GET /logout
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ */
 router.get('/logout', function(req : AuthenticatedRequest, res : Response, next : NextFunction){
     let sessionId = req.session.id;
     if(req.session && req.session.user && req.session.user.refreshToken){
@@ -151,7 +243,16 @@ router.get('/logout', function(req : AuthenticatedRequest, res : Response, next 
     }
   });
 
-  router.get('/refresh_auth', function (req : AuthenticatedRequest, res : Response, next : NextFunction) {
+  /**
+ * Authentication token refresh endpoint
+ * Refreshes expired authentication tokens using refresh token
+ * @name GET /refresh_auth
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ */
+router.get('/refresh_auth', function (req : AuthenticatedRequest, res : Response, next : NextFunction) {
     usertools.authExpiredAndRefreshAuthWithCallback(userClientsListManager.getSession(req.session.id), function(error : any, result : any) {
       if(error){
         res.redirect("/login");
@@ -163,4 +264,8 @@ router.get('/logout', function(req : AuthenticatedRequest, res : Response, next 
     });
   });
 
+/**
+ * Export the configured router with all authentication routes
+ * @type {Router}
+ */
 export default router;

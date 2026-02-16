@@ -1,9 +1,40 @@
+/**
+ * @fileoverview BFF (Backend for Frontend) routes for user and game management.
+ * Provides authenticated endpoints for user profile, games, and permissions.
+ * 
+ * Features:
+ * - User profile management
+ * - Game listing and details
+ * - Game permissions
+ * - Activity tracking
+ * - Class management
+ * 
+ * @module routers/bff 
+ * @requires express
+ * @requires ../libs/pumvaAsync
+ * @requires ../libs/logger
+ * @author PUMVA Team
+ */
+
 import { Router, Request, Response } from "express";
 import { AuthenticatedRequest } from "./api";
 import pumvaAsync from "../libs/pumvaAsync";
 import { logger } from "../libs/logger";
 
+/**
+ * Express router instance for BFF endpoints
+ * @type {Router}
+ */
 const router = Router();
+
+/**
+ * Get current user profile
+ * @name GET /users/me
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Object} User profile data or error
+ */
 router.get("/users/me", async (req: AuthenticatedRequest, res: Response) => {
     let user = await pumvaAsync.getCurrentUser(req.session.id);
     if (user) {
@@ -14,6 +45,14 @@ router.get("/users/me", async (req: AuthenticatedRequest, res: Response) => {
     }
 });
 
+/**
+ * Get games for the current user
+ * @name GET /games
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Array} List of games or error
+ */
 router.get("/games", async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.session.user?.sql?.user_id;
     if (!userId) {
@@ -28,6 +67,14 @@ router.get("/games", async (req: AuthenticatedRequest, res: Response) => {
     }
 });
 
+/**
+ * Get specific game details for the current user
+ * @name GET /games/:gameId
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Object} Game details or error
+ */
 router.get("/games/:gameId", async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.session.user?.sql?.user_id;
     const gameId = req.params.gameId;
@@ -47,6 +94,14 @@ router.get("/games/:gameId", async (req: AuthenticatedRequest, res: Response) =>
     }
 });
 
+/**
+ * Get game permissions for the current user
+ * @name GET /games/:gameId/permissions
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Array} List of game permissions or error
+ */
 router.get("/games/:gameId/permissions", async (req: AuthenticatedRequest, res: Response) => {
 	const gameId = req.params.gameId;
 	const userId = req.session.user?.sql?.user_id;
@@ -62,6 +117,14 @@ router.get("/games/:gameId/permissions", async (req: AuthenticatedRequest, res: 
 	}
 });
 
+/**
+ * Add new permission to a game
+ * @name POST /games/:gameId/permissions
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session and permission data
+ * @param {Response} res - Express response object
+ * @returns {Object} Created permission or error
+ */
 router.post("/games/:gameId/permissions", async (req: AuthenticatedRequest, res: Response) => {
 	const gameId = req.params.gameId;
 	const userId = req.session.user?.sql?.user_id;
@@ -80,6 +143,14 @@ router.post("/games/:gameId/permissions", async (req: AuthenticatedRequest, res:
 }
 );
 
+/**
+ * Remove a specific permission from a game
+ * @name DELETE /games/:gameId/permissions/:permissionId
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Object} Success message or error
+ */
 router.delete("/games/:gameId/permissions/:permissionId", async (req: AuthenticatedRequest, res: Response) => {
 	const gameId = req.params.gameId;
 	const permissionId = req.params.permissionId;
@@ -96,7 +167,14 @@ router.delete("/games/:gameId/permissions/:permissionId", async (req: Authentica
 	}
 });
 
-
+/**
+ * Get game versions for the current user
+ * @name GET /games/:gameId/versions
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Array} List of game versions or error
+ */
 router.get("/games/:gameId/versions", async (req: AuthenticatedRequest, res: Response) => {
 	const gameId = req.params.gameId;
 	const userId = req.session.user?.sql?.user_id;
@@ -112,6 +190,14 @@ router.get("/games/:gameId/versions", async (req: AuthenticatedRequest, res: Res
 	}
 });
 
+/**
+ * Delete a specific game version
+ * @name DELETE /games/:gameId/versions/:versionId
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Object} Success message or error
+ */
 router.delete("/games/:gameId/versions/:versionId", async (req: AuthenticatedRequest, res: Response) => {
 	const gameId = req.params.gameId;
 	const versionId = req.params.versionId;
@@ -128,6 +214,14 @@ router.delete("/games/:gameId/versions/:versionId", async (req: AuthenticatedReq
 	}
 });
 
+/**
+ * Get game guides for the current user
+ * @name GET /games/:gameId/guides
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Array} List of game guides or error
+ */
 router.get("/games/:gameId/guides", async (req: AuthenticatedRequest, res: Response) => {
 	const gameId = req.params.gameId;
 	const userId = req.session.user?.sql?.user_id;
@@ -144,6 +238,14 @@ router.get("/games/:gameId/guides", async (req: AuthenticatedRequest, res: Respo
 	}
 });
 
+/**
+ * Add new guide to a game
+ * @name POST /games/:gameId/guides
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session and guide data
+ * @param {Response} res - Express response object
+ * @returns {Object} Created guide or error
+ */
 router.post("/games/:gameId/guides", async (req: AuthenticatedRequest, res: Response) => {
 	const gameId = req.params.gameId;
 	const userId = req.session.user?.sql?.user_id;
@@ -161,6 +263,14 @@ router.post("/games/:gameId/guides", async (req: AuthenticatedRequest, res: Resp
 	}
 });
 
+/**
+ * Remove a specific guide from a game
+ * @name DELETE /games/:gameId/guides/:guideId
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Object} Success message or error
+ */
 router.delete("/games/:gameId/guides/:guideId", async (req: AuthenticatedRequest, res: Response) => {
 	const gameId = req.params.gameId;
 	const guideId = req.params.guideId;
@@ -178,6 +288,14 @@ router.delete("/games/:gameId/guides/:guideId", async (req: AuthenticatedRequest
 	}
 });
 
+/**
+ * Get game sessions for the current user
+ * @name GET /games/:gameId/sessions
+ * @function
+ * @param {AuthenticatedRequest} req - Express request object with session
+ * @param {Response} res - Express response object
+ * @returns {Array} List of game sessions or error
+ */
 router.get("/games/:gameId/sessions", async (req: AuthenticatedRequest, res: Response) => {
 	const gameId = req.params.gameId;
 	const userId = req.session.user?.sql?.user_id;
@@ -193,4 +311,8 @@ router.get("/games/:gameId/sessions", async (req: AuthenticatedRequest, res: Res
 	}
 });
 
+/**
+ * Export the configured BFF router with all authenticated endpoints
+ * @type {Router}
+ */
 export default router;
