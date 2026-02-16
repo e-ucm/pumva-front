@@ -43,13 +43,16 @@ export default function Login() {
   }, []);
 
   return (
-    <div>
-        <div id="logout_header" ref={logoutHeaderRef}>Login</div>
+    <div className="min-h-screen w-full flex flex-col">
+        <div id="logout_header" ref={logoutHeaderRef} className="text-center py-2 bg-gray-100 text-gray-700 font-medium">
+          Login
+        </div>
         <iframe 
           id="sso_connect" 
           ref={iframeRef}
-          className="content_filled" 
+          className="flex-1 w-full border-0" 
           src="/api/ssoconnect"
+          style={{ height: 'calc(100vh - 60px)' }}
         ></iframe>
     </div>
   )
