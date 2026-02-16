@@ -9,6 +9,7 @@ import { logger } from "../libs/logger";
 import userClientsListManager from '../libs/userClientsListManager';
 import axios from "axios";
 import * as usertools from "../libs/usertools";
+import pumvaAsync from "../libs/pumvaAsync";
 
 interface User {
   sso?: any;
@@ -95,7 +96,7 @@ router.get('/isAuthenticated', (req: AuthenticatedRequest, res: Response) => {
 });
 
 router.get('/openid/return', (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('openid', { failureRedirect: '/ssoconnect' }, (err : Error, user : User) => {
+  passport.authenticate('openid', { failureRedirect: '/ssoconnect' }, async (err : Error, user : User) => {
       logger.info('/openid/return: USER');
       if(err){
         logger.error(err);
@@ -105,16 +106,16 @@ router.get('/openid/return', (req: Request, res: Response, next: NextFunction) =
       logger.info(user);
       logger.info(authReq.session);
       authReq.session.user={};
-      authReq.session.user.sso = user.sso;
       authReq.session.user.jwt = user.jwt;
       authReq.session.user.refreshToken = user.refreshToken;
+      authReq.session.user.sso = user.sso;
       let session = authReq.session;
-      session.user = user;
       logger.info(user);
       const intendedUrl = authReq.session.intendedUrl || '/';
       delete authReq.session.intendedUrl;
       logger.info(session);
       userClientsListManager.addUserSession(session);
+      authReq.session.user.sql = await pumvaAsync.getCurrentUser(req.session.id);
       logger.info(authReq.session);
       res.redirect(intendedUrl);
     })(req, res, next);

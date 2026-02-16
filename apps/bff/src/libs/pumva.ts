@@ -62,7 +62,7 @@ export class Pumva {
 	}
 
 	//SHLINK URL
-	generateURL(url : string, tag : string, title : string, customSlug? : string, length? : number, callback : Function){
+	generateURL(url : string, tag : string, title : string, callback : Function, customSlug? : string, length? : number){
 		let body : any = {
 			"longUrl": url,
 			"tags": [
@@ -101,6 +101,65 @@ export class Pumva {
 
 	getCurrentUser(sessionId: string, callback: Function){
 		this.get(`${this.apiurl}/users/me`, sessionId, callback);
+	}
+
+	fetchGames(userId: number, sessionId: string, callback: Function) {
+		this.get(`${this.apiurl}/views/games/user/${userId}`, sessionId, callback);
+	}
+
+	fetchGame(userId: number, gameId: string | number, sessionId: string, callback: Function) {
+		this.get(`${this.apiurl}/views/games/user/${userId}`, sessionId, (err: any, games: any[]) => {
+			if (err) {
+				return callback(err);
+			}
+			const game = games.find((g) => g.game_id == gameId);
+			callback(null, game);
+			}
+		)
+	}
+
+	fetchVersions(gameId: number, sessionId: string, callback: Function) {
+		this.get(`${this.apiurl}/games/${gameId}/versions`, sessionId, callback);
+	}
+	
+	deleteVersion(gameId: number, versionId: number, sessionId: string, callback: Function)
+	{
+		this.delete(`${this.apiurl}/games/${gameId}/versions/${versionId}`, sessionId, callback);
+	}
+
+	fetchGuides(gameId: number, sessionId: string, callback: Function)
+	{
+		this.get(`${this.apiurl}/games/${gameId}/guides`, sessionId, callback);
+	}
+
+	addGuide(gameId: number, guide: any, sessionId: string, callback: Function)
+	{
+		this.post(`${this.apiurl}/games/${gameId}/guides`, guide, sessionId, callback);
+	}
+
+	removeGuide(gameId: number, guideId: number, sessionId: string, callback: Function)
+	{
+		this.delete(`${this.apiurl}/games/${gameId}/guides/${guideId}`, sessionId, callback);
+	}
+
+	fetchPermissions(gameId: number, sessionId: string, callback: Function)
+	{
+		this.get(`${this.apiurl}/games/${gameId}/permissions`, sessionId, callback);
+	}
+
+	addPermission(gameId: number, payload: any, sessionId: string, callback: Function)
+	{
+		this.post(`${this.apiurl}/games/${gameId}/permissions`, payload, sessionId, callback);
+	}
+
+	removePermission(gameId: number, permissionId: number, sessionId: string, callback: Function)
+	{
+		this.delete(`${this.apiurl}/games/${gameId}/permissions/${permissionId}`, sessionId, callback);
+	}
+
+	fetchSessions(gameId: number, sessionId: string, callback: Function)
+	{
+		this.get(`${this.apiurl}/games/${gameId}/sessions`, sessionId, callback);
 	}
 }
 
