@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import session from "express-session";
 import passport from "passport";
 import apiRouter from "./routers/api";
+import bffRouter from "./routers/bff";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,6 +34,7 @@ passport.deserializeUser((user, done) => {
 });
 
 app.use("/api", apiRouter);
+app.use("/bff", bffRouter);
 
 app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
