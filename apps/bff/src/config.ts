@@ -12,6 +12,12 @@ config.external_url = `${config.external_protocol}://${config.external_host}${ig
 config.favicon_file = process.env.PUMVA_FAVICON || '/favicon.ico'
 config.favicon_url = config.external_host + config.favicon_file
 
+config.api = {};
+config.api.host = process.env.PUMVA_API_HOST || 'api.external.test'
+config.api.protocol = process.env.PUMVA_API_PROTOCOL || 'https'
+config.api.port = process.env.PUMVA_API_PORT || 443
+config.api.url = `${config.api.protocol}://${config.api.host}${ignored_ports.includes(config.api.port) ? '' : `:${config.api.port}` }`
+
 config.logger = {};
 config.logger.level = process.env.LOGGER_LEVEL || 'info';
 config.logger.processTag = process.env.LOGGER_PROCESS_TAG || 'bff';
@@ -34,5 +40,12 @@ config.sso.client_secret = process.env.SSO_CLIENT_SECRET || 'secret'
 config.sso.ssl_required = process.env.SSO_SSL_REQUIRED || 'external'
 config.sso.public_client = process.env.SSO_PUBLIC_CLIENT || 'false'
 config.sso.url = `${config.sso.protocol}://${config.sso.host}${ignored_ports.includes(config.sso.port) ? '' : `:${config.sso.port}` }`
+
+config.shlink = {};
+config.shlink.apihost = process.env.SHORTLINK_HOST || 'shlink.external.test'
+config.shlink.protocol = process.env.SHORTLINK_PROTOCOL || 'https'
+config.shlink.port = process.env.SHORTLINK_PORT || 443
+config.shlink.apiurl = `${config.shlink.protocol}://${config.shlink.apihost}${ignored_ports.includes(config.shlink.port) ? '' : `:${config.shlink.port}` }`
+config.shlink.apikey = process.env.SHORTLINK_API_KEY || 'shlink-api-key';
 
 export default config;
