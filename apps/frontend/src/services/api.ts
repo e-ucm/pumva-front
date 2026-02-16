@@ -31,9 +31,8 @@ export async function getMe() {
 }
 
 export async function fetchGames(userId: number) {
-	const res = await fetch(`/api/games/user/${userId}`, {
+	const res = await fetch(`/bff/games`, {
 		headers: {
-			Authorization: `Bearer ${API_TOKEN}`,
 			"Content-Type": "application/json",
 		},
 	});
@@ -42,9 +41,8 @@ export async function fetchGames(userId: number) {
 }
 
 export async function fetchGame(userId: number, gameId: string | number) {
-	const res = await fetch(`/api/games/user/${userId}`, {
+	const res = await fetch(`/bff/games`, {
 		headers: {
-			Authorization: `Bearer ${API_TOKEN}`,
 			"Content-Type": "application/json",
 		},
 	});
@@ -56,24 +54,24 @@ export async function fetchGame(userId: number, gameId: string | number) {
 }
 
 export async function fetchVersions(gameId: number) {
-	const res = await fetch(`${API_BASE}/games/${gameId}/versions`);
+	const res = await fetch(`/bff/games/${gameId}/versions`);
 	return handleRes(res);
 }
 
 export async function deleteVersion(gameId: number, versionId: number) {
-	const res = await fetch(`${API_BASE}/games/${gameId}/versions/${versionId}`, {
+	const res = await fetch(`/bff/games/${gameId}/versions/${versionId}`, {
 		method: "DELETE",
 	});
 	return handleRes(res);
 }
 
 export async function fetchGuides(gameId: number) {
-	const res = await fetch(`${API_BASE}/games/${gameId}/guides`);
+	const res = await fetch(`/bff/games/${gameId}/guides`);
 	return handleRes(res);
 }
 
 export async function addGuide(gameId: number, guide: any) {
-	const res = await fetch(`${API_BASE}/games/${gameId}/guides`, {
+	const res = await fetch(`/bff/games/${gameId}/guides`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(guide),
@@ -82,19 +80,19 @@ export async function addGuide(gameId: number, guide: any) {
 }
 
 export async function removeGuide(gameId: number, guideId: number) {
-	const res = await fetch(`${API_BASE}/games/${gameId}/guides/${guideId}`, {
+	const res = await fetch(`/bff/games/${gameId}/guides/${guideId}`, {
 		method: "DELETE",
 	});
 	return handleRes(res);
 }
 
 export async function fetchPermissions(gameId: number) {
-	const res = await fetch(`${API_BASE}/games/${gameId}/permissions`);
+	const res = await fetch(`/bff/games/${gameId}/permissions`);
 	return handleRes(res);
 }
 
 export async function addPermission(gameId: number, payload: any) {
-	const res = await fetch(`${API_BASE}/games/${gameId}/permissions`, {
+	const res = await fetch(`/bff/games/${gameId}/permissions`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(payload),
@@ -104,7 +102,7 @@ export async function addPermission(gameId: number, payload: any) {
 
 export async function removePermission(gameId: number, permissionId: number) {
 	const res = await fetch(
-		`${API_BASE}/games/${gameId}/permissions/${permissionId}`,
+		`/bff/games/${gameId}/permissions/${permissionId}`,
 		{
 			method: "DELETE",
 		},
@@ -113,7 +111,7 @@ export async function removePermission(gameId: number, permissionId: number) {
 }
 
 export async function fetchSessions(gameId: number) {
-	const res = await fetch(`${API_BASE}/games/${gameId}/sessions`);
+	const res = await fetch(`/bff/games/${gameId}/sessions`);
 	return handleRes(res);
 }
 
